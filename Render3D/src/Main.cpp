@@ -9,6 +9,11 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
+void setCamVel(glm::vec3* currCamVel, const glm::vec3& camVel);
+void adjustCamVel(glm::vec3* currCamVel, const glm::vec3& adjustVect);
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+glm::vec3 camVel = glm::vec3(0.0f, 0.0f, 0.0f);
+
 int main(void)
 {
     const int WIDTH = 800;
@@ -88,6 +93,8 @@ int main(void)
         glm::vec3 centeredPoint( 0.0f,  0.0f,  0.0f);
         glm::vec3 upVect( 0.0f,  1.0f,  0.0f);
 
+        glfwSetKeyCallback(window, keyCallback);
+
         while (!glfwWindowShouldClose(window))
         {
             renderer.clear();
@@ -110,9 +117,70 @@ int main(void)
             glfwSwapBuffers(window);
 
             glfwPollEvents();
+
+            camPos += camVel;
         }
     }
 
     glfwTerminate();
     return 0;
+}
+
+void setCamVel(glm::vec3* currCamVel, const glm::vec3& camVel)
+{
+    *currCamVel = camVel;
+}
+
+void adjustCamVel(glm::vec3* currCamVel, const glm::vec3& adjustVect)
+{
+    *currCamVel += adjustVect;
+}
+
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    const float SPEED = 0.05;
+    if (key == GLFW_KEY_W)
+    {
+        if (action == GLFW_PRESS)
+        {
+            adjustCamVel(&camVel, glm::vec3(0.0f, 0.0f, SPEED));
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            adjustCamVel(&camVel, glm::vec3(0.0f, 0.0f, -SPEED));
+        }
+    }
+    else if (key == GLFW_KEY_S)
+    {
+        if (action == GLFW_PRESS)
+        {
+            adjustCamVel(&camVel, glm::vec3(0.0f, 0.0f, -SPEED));
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            adjustCamVel(&camVel, glm::vec3(0.0f, 0.0f, SPEED));
+        }
+    }
+    else if (key == GLFW_KEY_A)
+    {
+        if (action == GLFW_PRESS)
+        {
+            adjustCamVel(&camVel, glm::vec3(-SPEED, 0.0f, 0.0f));
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            adjustCamVel(&camVel, glm::vec3(SPEED, 0.0f, 0.0f));
+        }
+    }
+    else if (key == GLFW_KEY_D)
+    {
+        if (action == GLFW_PRESS)
+        {
+            adjustCamVel(&camVel, glm::vec3(SPEED, 0.0f, 0.0f));
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            adjustCamVel(&camVel, glm::vec3(-SPEED, 0.0f, 0.0f));
+        }
+    }
 }
