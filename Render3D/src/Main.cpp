@@ -6,9 +6,18 @@
 #include "VertexBufferLayout.h"
 #include "IndexBuffer.h"
 #include "Renderer.h"
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
 
 int main(void)
 {
+    const int WIDTH = 800;
+    const int HEIGHT = 600;
+    const float FOV = 90.0f;
+    const float Z_NEAR = 1.0f;
+    const float Z_FAR = 10.0f;
+    const float ASPECT_RATIO = (float)WIDTH / HEIGHT;
+
     GLFWwindow* window;
 
     if (!glfwInit())
@@ -18,7 +27,7 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(800, 600, "Render 3D", NULL, NULL);
+    window = glfwCreateWindow(WIDTH, HEIGHT, "Render 3D", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -36,10 +45,10 @@ int main(void)
 
     {
         float vertices[] = {
-            -0.5f, -0.5f,   // 0
-             0.5f, -0.5f,   // 1
-             0.5f,  0.5f,   // 2
-            -0.5f,  0.5f,   // 3
+            -0.5f, -0.5f,  1.0f,   // 0
+             0.5f, -0.5f,  1.0f,   // 1
+             0.5f,  0.5f,  1.0f,   // 2
+            -0.5f,  0.5f,  1.0f,   // 3
         };
 
         unsigned int indices[] = {
@@ -54,20 +63,16 @@ int main(void)
         VertexBuffer vb(vertices, sizeof(vertices));
 
         VertexBufferLayout layout;
-        layout.push<float>(2);
+        layout.push<float>(3);
         va.addBuffer(vb, layout);
 
         IndexBuffer ib(indices, sizeof(indices) / sizeof(unsigned int));
 
-        //glm::mat4 proj = glm::ortho(-1.33f, 1.33f, -1.0f, 1.0f, -1.0f, 1.0f);
-        //glm::mat4 view = glm::translate(glm::mat4(1.0), glm::vec3(0.0f, 0.0f, 0.0f));
-        //glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-
-        //glm::mat4 mvp = proj * view * model;
+        glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 proj = glm::perspective(glm::radians(FOV / 2), ASPECT_RATIO, Z_NEAR, Z_FAR);
 
         Shader shader("res/shaders/Simple.shader");
         shader.bind();
-        shader.setUniform4f("u_color", 1.0f, 1.0f, 1.0f, 1.0f);
 
         va.unbind();
         shader.unbind();
@@ -76,14 +81,31 @@ int main(void)
 
         Renderer renderer;
 
+        float r = 0.5;
+        float inc = 0.02;
+
+        glm::vec3 camPos( 0.0f,  0.0f, -1.0f);
+        glm::vec3 centeredPoint( 0.0f,  0.0f,  0.0f);
+        glm::vec3 upVect( 0.0f,  1.0f,  0.0f);
+
         while (!glfwWindowShouldClose(window))
         {
             renderer.clear();
 
             shader.bind();
-            shader.setUniform4f("u_color", 1.0f, 1.0f, 1.0f, 1.0f);
+            shader.setUniform4f("u_color", 1.0f * r, 0.2f, 0.4f, 1.0f);
+
+            glm::mat4 view = glm::lookAt(camPos, centeredPoint, upVect);
+            glm::mat4 mvp = proj * view * model;
+            shader.setUniformMat4f("u_mvp", mvp);
 
             renderer.draw(va, ib, shader);
+
+            if (r > 1.0)
+                inc = -0.02;
+            else if (r < 0.5)
+                inc = 0.02;
+            r += inc;
 
             glfwSwapBuffers(window);
 
