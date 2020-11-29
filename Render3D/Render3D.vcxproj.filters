@@ -1330,5 +1330,8 @@
     <Image Include="res\textures\Tile.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="res\textures\whiteTile.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

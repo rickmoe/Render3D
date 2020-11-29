@@ -55,8 +55,11 @@ int main(void)
     std::cout << " [Controls]:\n   W\t  - FORWARD\n   A\t  - LEFT\n   S\t  - BACKWARDS\n   D\t  - RIGHT\n   SPACE  - UP\n   LSHIFT - DOWN\n"
         "   Q\t  - TURN LEFT\n   E\t  - TURN RIGHT\n   R\t  - LOOK UP\n   F\t  - LOOK DOWN\n";
 
+    GLCall(glEnable(GL_BLEND));
+    GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
     {
-        float vertices[] = {
+        float wallVertices[] = {
             -25.0f,  0.0f,  25.0f, -5.0f, -3.0f,
              25.0f,  0.0f,  25.0f,  5.0f, -3.0f,
              25.0f, 15.0f,  25.0f,  5.0f,  3.0f,
@@ -65,15 +68,9 @@ int main(void)
             -25.0f,  0.0f, -25.0f,  5.0f, -3.0f,
             -25.0f, 15.0f, -25.0f,  5.0f,  3.0f,
              25.0f, 15.0f, -25.0f, -5.0f,  3.0f,
-            -25.0f,  0.0f, -25.0f, -5.0f, -5.0f,
-             25.0f,  0.0f, -25.0f,  5.0f, -5.0f,
-             25.0f,  0.0f,  25.0f,  5.0f,  5.0f,
-            -25.0f,  0.0f,  25.0f, -5.0f,  5.0f,
         };
 
-        unsigned int indices[] = {
-             8,  9, 10,
-            10, 11,  8, 
+        unsigned int wallIndices[] = {
              1,  4,  7,
              7,  2,  1,
              5,  0,  3,
@@ -84,33 +81,48 @@ int main(void)
              6,  7,  4,
         };
 
-        GLCall(glEnable(GL_BLEND));
-        GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        float floorVertices[] = {
+            -25.0f,  0.0f, -25.0f, -5.0f, -5.0f,
+             25.0f,  0.0f, -25.0f,  5.0f, -5.0f,
+             25.0f,  0.0f,  25.0f,  5.0f,  5.0f,
+            -25.0f,  0.0f,  25.0f, -5.0f,  5.0f,
+        };
 
-        VertexArray va;
-        VertexBuffer vb(vertices, sizeof(vertices));
+        unsigned int floorIndices[] = {
+            0, 1, 2,
+            2, 3, 0,
+        };
 
         VertexBufferLayout layout;
         layout.push<float>(3);
         layout.push<float>(2);
-        va.addBuffer(vb, layout);
 
-        IndexBuffer ib(indices, sizeof(indices) / sizeof(unsigned int));
-
+        VertexArray wallVA;
+        VertexBuffer wallVB(wallVertices, sizeof(wallVertices));
+        wallVA.addBuffer(wallVB, layout);
+        IndexBuffer wallIB(wallIndices, sizeof(wallIndices) / sizeof(unsigned int));
+        
+        VertexArray floorVA;
+        VertexBuffer floorVB(floorVertices, sizeof(floorVertices));
+        floorVA.addBuffer(floorVB, layout);
+        IndexBuffer floorIB(floorIndices, sizeof(floorIndices) / sizeof(unsigned int));
+        
         glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         glm::mat4 proj = glm::perspective(glm::radians(FOV / 2), ASPECT_RATIO, Z_NEAR, Z_FAR);
 
         Shader shader("res/shaders/Simple.shader");
         shader.bind();
-        
-        Texture texture("res/textures/Tile.png");
-        texture.bind(0);
-        shader.setUniform1i("u_texture", 0);
 
-        va.unbind();
+        Texture wallTexture("res/textures/Tile.png");
+        wallTexture.bind(0);
+
+        wallVA.unbind();
+        floorVA.unbind();
         shader.unbind();
-        vb.unbind();
-        ib.unbind();
+        wallVB.unbind();
+        wallIB.unbind();
+        floorVB.unbind();
+        floorIB.unbind();
         
         Renderer renderer;
 
@@ -127,14 +139,20 @@ int main(void)
         {
             renderer.clear();
 
-            shader.bind();
-            shader.setUniform4f("u_color", 1.0f * gi, 1.0f * gi, 1.0f * gi, 1.0f);
-
             glm::mat4 view = glm::lookAt(camPos, centeredPoint, upVect);
             glm::mat4 mvp = proj * view * model;
-            shader.setUniformMat4f("u_mvp", mvp);
 
-            renderer.draw(va, ib, shader);
+            shader.bind();
+            shader.setUniform4f("u_color", 1.0f * gi, 1.0f * gi, 1.0f * gi, 1.0f);
+            shader.setUniformMat4f("u_mvp", mvp);
+            shader.setUniform1i("u_texture", 0);
+            renderer.draw(floorVA, floorIB, shader);
+
+            shader.bind();
+            shader.setUniform4f("u_color", 1.0f * gi, 1.0f * gi, 1.0f * gi, 1.0f);
+            shader.setUniformMat4f("u_mvp", mvp);
+            shader.setUniform1i("u_texture", 0);
+            renderer.draw(wallVA, wallIB, shader);
 
             if (gi > 0.9 || gi < 0.5)
                 inc *= -1;
