@@ -21,7 +21,7 @@ int main(void)
 {
     const int WIDTH = 800;
     const int HEIGHT = 600;
-    const float FOV = 90.0f;
+    const float FOV = 120.0f;
     const float Z_NEAR = 1.0f;
     const float Z_FAR = 1000.0f;
     const float ASPECT_RATIO = (float)WIDTH / HEIGHT;
@@ -49,37 +49,39 @@ int main(void)
     if (glewInit() != GLEW_OK)
         std::cout << "Error!\n";
 
-    std::cout << glGetString(GL_VERSION) << "\n";
+    std::cout << glGetString(GL_VERSION) << "\n\n";
+
+    std::cout << "Welcome to Render3D, A Developmental Home-Made 3D Rendering Engine Using OpenGL\n";
+    std::cout << " [Controls]:\n   W\t  - FORWARD\n   A\t  - LEFT\n   S\t  - BACKWARDS\n   D\t  - RIGHT\n   SPACE  - UP\n   LSHIFT - DOWN\n"
+        "   Q\t  - TURN LEFT\n   E\t  - TURN RIGHT\n   R\t  - LOOK UP\n   F\t  - LOOK DOWN\n";
 
     {
-        /*
         float vertices[] = {
-            -25.0f,  0.0f, -25.0f,
-             25.0f,  0.0f, -25.0f,
-             25.0f,  0.0f,  25.0f,
-            -25.0f,  0.0f,  25.0f,
-        };
-        */
-        float vertices[] = {
-            -25.0f,  0.0f,  25.0f, -5.0f, -2.0f,
-             25.0f,  0.0f,  25.0f,  5.0f, -2.0f,
-             25.0f, 10.0f,  25.0f,  5.0f,  2.0f,
-            -25.0f, 10.0f,  25.0f, -5.0f,  2.0f,
-             25.0f,  0.0f, -25.0f, -5.0f, -2.0f,
-            -25.0f,  0.0f, -25.0f,  5.0f, -2.0f,
-            -25.0f, 10.0f, -25.0f,  5.0f,  2.0f,
-             25.0f, 10.0f, -25.0f, -5.0f,  2.0f,
+            -25.0f,  0.0f,  25.0f, -5.0f, -3.0f,
+             25.0f,  0.0f,  25.0f,  5.0f, -3.0f,
+             25.0f, 15.0f,  25.0f,  5.0f,  3.0f,
+            -25.0f, 15.0f,  25.0f, -5.0f,  3.0f,
+             25.0f,  0.0f, -25.0f, -5.0f, -3.0f,
+            -25.0f,  0.0f, -25.0f,  5.0f, -3.0f,
+            -25.0f, 15.0f, -25.0f,  5.0f,  3.0f,
+             25.0f, 15.0f, -25.0f, -5.0f,  3.0f,
+            -25.0f,  0.0f, -25.0f, -5.0f, -5.0f,
+             25.0f,  0.0f, -25.0f,  5.0f, -5.0f,
+             25.0f,  0.0f,  25.0f,  5.0f,  5.0f,
+            -25.0f,  0.0f,  25.0f, -5.0f,  5.0f,
         };
 
         unsigned int indices[] = {
-            0, 1, 2,
-            2, 3, 0,
-            4, 5, 6,
-            6, 7, 4,
-            1, 4, 7,
-            7, 2, 1,
-            5, 0, 3,
-            3, 6, 5,
+             8,  9, 10,
+            10, 11,  8, 
+             1,  4,  7,
+             7,  2,  1,
+             5,  0,  3,
+             3,  6,  5,
+             0,  1,  2,
+             2,  3,  0,
+             4,  5,  6,
+             6,  7,  4,
         };
 
         GLCall(glEnable(GL_BLEND));
@@ -112,10 +114,10 @@ int main(void)
         
         Renderer renderer;
 
-        float r = 0.5;
-        float inc = 0.02;
+        float gi = 0.5;
+        float inc = 0.01;
 
-        glm::vec3 camPos( 0.0f,  2.0f,  0.0f);
+        glm::vec3 camPos( 0.0f,  4.0f,  -5.0f);
         glm::vec3 centeredPoint( 0.0f,  0.0f,  0.0f);
         glm::vec3 upVect( 0.0f,  1.0f,  0.0f);
 
@@ -126,7 +128,7 @@ int main(void)
             renderer.clear();
 
             shader.bind();
-            shader.setUniform4f("u_color", 1.0f * r, 1.0f * r, 1.0f * r, 1.0f);
+            shader.setUniform4f("u_color", 1.0f * gi, 1.0f * gi, 1.0f * gi, 1.0f);
 
             glm::mat4 view = glm::lookAt(camPos, centeredPoint, upVect);
             glm::mat4 mvp = proj * view * model;
@@ -134,11 +136,9 @@ int main(void)
 
             renderer.draw(va, ib, shader);
 
-            if (r > 1.0)
-                inc = -0.02;
-            else if (r < 0.5)
-                inc = 0.02;
-            r += inc;
+            if (gi > 0.9 || gi < 0.5)
+                inc *= -1;
+            gi += inc;
 
             glfwSwapBuffers(window);
 
